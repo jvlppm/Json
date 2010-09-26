@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Dynamic;
+using System.Text;
+using System.Globalization;
+using System.Reflection;
 
 namespace Json
 {
@@ -78,7 +81,7 @@ namespace Json
 						throw new SemanticException("':'", nextToken.Value, reader.Position);
 
 					dynamic value = JsonBuilder.Build(reader);
-					((IDictionary<String, Object>) obj).Add(property.Value, value);
+					((IDictionary<string, object>) obj).Add(property.Value, value);
 
 					nextToken = reader.ReadToken();
 
@@ -116,6 +119,66 @@ namespace Json
 			}
 
 			return values.ToArray();
+		}
+
+		public static string Extract(dynamic obj)
+		{
+			if (obj == null)
+				return "null";
+
+			if (obj is IDictionary<string, object>)
+			{
+				StringBuilder json = new StringBuilder();
+				json.Append("{");
+
+				bool first = true;
+
+				foreach (var key in (obj as IDictionary<string, object>).Keys)
+				{
+					if (first) first = false;
+					else json.Append(',');
+
+					json.AppendFormat("\"{0}\":{1}", key, Extract((obj as IDictionary<string, object>)[key]));
+				}
+
+				json.Append("}");
+
+				return json.ToString();
+			}
+
+			else if (obj is Array)
+			{
+				StringBuilder json = new StringBuilder();
+				json.Append("[");
+
+				bool first = true;
+
+				foreach (var value in obj)
+				{
+					if (first) first = false;
+					else json.Append(',');
+
+					json.Append(Extract(value));
+				}
+
+				json.Append("]");
+
+				return json.ToString();
+			}
+
+			if (obj is bool)
+				return ((bool)obj).ToString().ToLower();
+
+			if (obj is int || obj is Int64 || obj is decimal || obj is double || obj is float)
+				return obj.ToString(CultureInfo.InvariantCulture);
+
+			if(obj is string)
+				return "\"" + obj.ToString() + "\"";
+
+			Dictionary<string, object> extractedInfo = new Dictionary<string,object>();
+			foreach (PropertyInfo prop in obj.GetType().GetProperties())
+				extractedInfo.Add(prop.Name, prop.GetValue(obj, null));
+			return Extract(extractedInfo);
 		}
 	}
 }
