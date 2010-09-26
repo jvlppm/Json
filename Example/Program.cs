@@ -11,23 +11,10 @@ namespace Example
 	{
 		static void Main(string[] args)
 		{
-#if !dotnet40
-			string json = "[        {                \"id\":\"1-q.d\",\"data\":                {                \"isViewer\":true,\"id\":\"81345167181005418762\",\"thumbnailUrl\":\"http://static1.orkut.com/img/i_nophoto64.gif\",\"name\":{        \"familyName\":\"Family Name\",\"givenName\":\"Someone\"}        }}]";
+			dynamic pessoas = JsonBuilder.Build("[{\"nome\":\"João Vitor\", idade: 24}, {\"nome\":\"Teste\", idade: 10}]");
 
-			dynamic obj = new Json.JsonValue(new Json.JsonReader(json));
-
-			Console.WriteLine("Id: " + obj.id);
-			Console.WriteLine("Name: " + obj.data.name.givenName);
-			Console.WriteLine("Thumbnail: " + obj.data.thumbnailUrl);
-#else
-			string json = "[        {                \"id\":\"1-q.d\",\"data\":                {                \"isViewer\":true,\"id\":\"81345167181005418762\",\"thumbnailUrl\":\"http://static1.orkut.com/img/i_nophoto64.gif\",\"name\":{        \"familyName\":\"Family Name\",\"givenName\":\"Someone\"}        }}]";
-
-			JsonValue obj = new JsonValue(new JsonReader(json));
-
-			Console.WriteLine("Id: " + obj["id"]);
-			Console.WriteLine("Name: " + obj["data"]["name"]["givenName"]);
-			Console.WriteLine("Thumbnail: " + obj["data"]["thumbnailUrl"]);
-#endif
+			foreach (var pessoa in pessoas)
+				Console.WriteLine(pessoa.nome + ": " + pessoa.idade);
 		}
 	}
 }

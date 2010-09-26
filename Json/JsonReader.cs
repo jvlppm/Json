@@ -31,7 +31,7 @@ namespace Json
 	public class JsonReader
 	{
 		public string Text { get; private set; }
-		int Position { get; set; }
+		public int Position { get; private set; }
 
 		Stack<JsonToken> BackToken { get; set; }
 
@@ -78,7 +78,7 @@ namespace Json
 
 					case '\"':
 						if (token != string.Empty)
-							throw new System.Exception("Unexpected char '\"' while reading \"" + token + "\"");
+							throw new LexicalException("Unexpected char '\"' while reading \"" + token + "\"", Position);
 
 						int startQuote = Position;
 						for (Position++; Position < Text.Length; Position++)
@@ -91,7 +91,7 @@ namespace Json
 								return new JsonToken(JsonToken.TokenType.String, token);
 							}
 						}
-						throw new System.Exception("End quote not found for quote at " + startQuote);
+						throw new LexicalException("End quote not found for quote at " + startQuote, Position);
 
 					default:
 						if (token == string.Empty)
