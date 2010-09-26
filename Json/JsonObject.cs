@@ -9,7 +9,9 @@ namespace Json
 	public enum ObjectType
 	{
 		Null,
+		Boolean,
 		String,
+		Number,
 		Object,
 		Array
 	}
@@ -20,7 +22,7 @@ namespace Json
 		{
 			get
 			{
-				if(Type == ObjectType.Array && Array.Values.Count == 1)
+				if (Type == ObjectType.Array && Array.Values.Count == 1)
 					return Array.Values[0][property];
 				if (Type == ObjectType.Object)
 					return Object.Properties[property];
@@ -57,31 +59,57 @@ namespace Json
 		}
 
 		public ObjectType Type { get; set; }
-
 		public string String { get; private set; }
 		public JsonObject Object { get; private set; }
 		public JsonArray Array { get; private set; }
 
 		public JsonValue(JsonReader reader)
 		{
-			string token = reader.ReadToken();
-			switch (token)
+			var token = reader.ReadToken();
+			switch (token.Type)
 			{
-				case "{":
-					Type = ObjectType.Object;
+				case JsonToken.TokenType.SpecialChar:
 					reader.PutBack(token);
-					Object = new JsonObject(reader);
+
+					if (token.Value == "{")
+					{
+						Type = ObjectType.Object;
+						Object = new JsonObject(reader);
+					}
+					else if (token.Value == "[")
+					{
+						Type = ObjectType.Array;
+						Array = new JsonArray(reader);
+					}
+					else throw new System.Exception("Unexpected special char '" + token.Value + "'");
+
 					break;
 
-				case "[":
-					Type = ObjectType.Array;
-					reader.PutBack(token);
-					Array = new JsonArray(reader);
+				case JsonToken.TokenType.Number:
+					Type = ObjectType.Number;
+					String = token.Value;
 					break;
 
-				default:
+				case JsonToken.TokenType.String:
 					Type = ObjectType.String;
-					String = token;
+					String = token.Value;
+					break;
+
+				case JsonToken.TokenType.KeyWord:
+					switch (token.Value)
+					{
+						case "null":
+							Type = ObjectType.Null;
+							break;
+
+						case "false":
+						case "true":
+							Type = ObjectType.Boolean;
+							String = token.Value;
+							break;
+
+						default: throw new System.Exception("Unexpected keyword \"" + token.Value + "\"");
+					}
 					break;
 			}
 		}
@@ -130,22 +158,25 @@ namespace Json
 		{
 			Values = new List<JsonValue>();
 
-			if (reader.ReadToken() != "[")
+			var nextToken = reader.ReadToken();
+			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "[")
 				throw new Exception("Invalid Json, '[' expected");
 
-			string nextToken = reader.ReadToken();
-			reader.PutBack(nextToken);
+			nextToken = reader.ReadToken();
 
-			do
+			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "]")
 			{
-				Values.Add(new JsonValue(reader));
-				nextToken = reader.ReadToken();
-				if(nextToken != ",")
-					reader.PutBack(nextToken);
-			} while (nextToken == ",");
+				reader.PutBack(nextToken);
 
-			if (reader.ReadToken() != "]")
-				throw new Exception("Invalid Json, ']' expected");
+				do
+				{
+					Values.Add(new JsonValue(reader));
+					nextToken = reader.ReadToken();
+				} while (nextToken.Type == JsonToken.TokenType.SpecialChar && nextToken.Value == ",");
+
+				if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "]")
+					throw new Exception("Invalid Json, ']' expected");
+			}
 		}
 
 		public IEnumerator<JsonValue> GetEnumerator()
@@ -178,34 +209,39 @@ namespace Json
 
 		public JsonObject(JsonReader reader)
 		{
-			if (reader.ReadToken() != "{")
+			var nextToken = reader.ReadToken();
+
+			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "{")
 				throw new Exception("Invalid Json, '{' expected");
 
 			Properties = new Dictionary<string, JsonValue>();
 
-			string nextToken = reader.ReadToken();
+			nextToken = reader.ReadToken();
 
-			if (nextToken == "}")
-				return;
-
-			reader.PutBack(nextToken);
-
-			do
+			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "}")
 			{
-				string property = reader.ReadToken();
+				reader.PutBack(nextToken);
 
-				if (reader.ReadToken() != ":")
-					throw new Exception("Invalid Json, ':' expected");
+				do
+				{
+					var property = reader.ReadToken();
+					if (property.Type != JsonToken.TokenType.String)
+						throw new Exception("Invalid Json, field-name expected, got \"" + property.Type + "\" instead");
 
-				JsonValue value = new JsonValue(reader);
-				nextToken = reader.ReadToken();
+					nextToken = reader.ReadToken();
+					if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != ":")
+						throw new Exception("Invalid Json, ':' expected");
 
-				Properties.Add(property, value);
+					JsonValue value = new JsonValue(reader);
+					Properties.Add(property.Value, value);
 
-			} while (nextToken == ",");
+					nextToken = reader.ReadToken();
 
-			if (nextToken != "}")
-				throw new Exception("Invalid Json, '}' expected");
+				} while (nextToken.Type == JsonToken.TokenType.SpecialChar && nextToken.Value == ",");
+
+				if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "}")
+					throw new Exception("Invalid Json, '}' expected");
+			}
 		}
 	}
 }
