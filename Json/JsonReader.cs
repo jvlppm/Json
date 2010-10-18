@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace Json
 {
@@ -84,7 +85,34 @@ namespace Json
 						for (Position++; Position < Text.Length; Position++)
 						{
 							if (Text[Position] != '\"')
-								token += Text[Position];
+							{
+								if (Text[Position] != '\\')
+									token += Text[Position];
+								else
+								{
+									Position++;
+									switch (Text[Position])
+									{
+										case 'b': token += "\b"; break;
+										case 'f': token += "\f"; break;
+										case 'n': token += "\n"; break;
+										case 'r': token += "\r"; break;
+										case 't': token += "\t"; break;
+										case 'v': token += "\v"; break;
+										case '\"': token += "\""; break;
+										case '\\': token += "\\"; break;
+
+										case 'u':
+											string code = Text.Substring(Position + 1, 4);
+											Position += 4;
+											token += (char)int.Parse(code, NumberStyles.HexNumber);
+											break;
+
+										default:
+											throw new LexicalException("Bad escape sequence: \'\\" + Text[Position] + "\'", Position);
+									}
+								}
+							}
 							else
 							{
 								Position++;
@@ -96,9 +124,11 @@ namespace Json
 					default:
 						if (token == string.Empty)
 						{
-							if (char.IsNumber(Text[Position]))
+							if (char.IsNumber(Text[Position]) || Text[Position] == '+' || Text[Position] == '-')
 								tokenType = JsonToken.TokenType.Number;
 						}
+						else if (tokenType == JsonToken.TokenType.Number && !char.IsNumber(Text[Position]))
+							tokenType = JsonToken.TokenType.String;
 						token += Text[Position];
 						break;
 				}
