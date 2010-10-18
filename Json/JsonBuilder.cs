@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
-using System.Text;
 using System.Globalization;
 using System.Reflection;
+using System.Text;
+using System.Collections;
 
 namespace Json
 {
@@ -26,7 +27,7 @@ namespace Json
 						return BuildObject(reader);
 
 					else if (token.Value == "[")
-						return BuildArray(reader);
+						return BuildList(reader);
 
 					throw new SemanticException(new [] {"'{'", "'['"}, token.Value, reader.Position);
 
@@ -94,7 +95,7 @@ namespace Json
 			return obj;
 		}
 
-		public static dynamic[] BuildArray(JsonReader reader)
+		public static List<dynamic> BuildList(JsonReader reader)
 		{
 			var values = new List<dynamic>();
 
@@ -118,53 +119,13 @@ namespace Json
 					throw new SemanticException("']'", nextToken.Value, reader.Position);
 			}
 
-			return values.ToArray();
+			return values;
 		}
 
-		public static string Extract(dynamic obj)
+		public static string Extract(dynamic obj, bool ident = false, int currentIdentation = 0)
 		{
-			if (obj == null)
+			if ((object)obj == null)
 				return "null";
-
-			if (obj is IDictionary<string, object>)
-			{
-				StringBuilder json = new StringBuilder();
-				json.Append("{");
-
-				bool first = true;
-
-				foreach (var key in (obj as IDictionary<string, object>).Keys)
-				{
-					if (first) first = false;
-					else json.Append(',');
-
-					json.AppendFormat("\"{0}\":{1}", key, Extract((obj as IDictionary<string, object>)[key]));
-				}
-
-				json.Append("}");
-
-				return json.ToString();
-			}
-
-			else if (obj is Array)
-			{
-				StringBuilder json = new StringBuilder();
-				json.Append("[");
-
-				bool first = true;
-
-				foreach (var value in obj)
-				{
-					if (first) first = false;
-					else json.Append(',');
-
-					json.Append(Extract(value));
-				}
-
-				json.Append("]");
-
-				return json.ToString();
-			}
 
 			if (obj is bool)
 				return ((bool)obj).ToString().ToLower();
@@ -172,13 +133,104 @@ namespace Json
 			if (obj is int || obj is Int64 || obj is decimal || obj is double || obj is float)
 				return obj.ToString(CultureInfo.InvariantCulture);
 
-			if(obj is string)
-				return "\"" + obj.ToString() + "\"";
+			if (obj is string || obj is char)
+				return "\"" + EncodeString(obj.ToString()) + "\"";
+
+			if (obj is IDictionary<string, object>)
+			{
+				StringBuilder json = new StringBuilder();
+				if (ident)
+					json.AppendLine();
+				json.Append(new string('\t', currentIdentation));
+				json.Append("{");
+
+				bool first = true;
+
+				if (ident)
+					currentIdentation++;
+
+				foreach (var key in (obj as IDictionary<string, object>).Keys)
+				{
+					if (first) first = false;
+					else json.Append(',');
+
+					if (ident)
+					{
+						json.AppendLine();
+						json.Append(new string('\t', currentIdentation));
+					}
+
+					json.AppendFormat(ident ? "\"{0}\": {1}" : "\"{0}\":{1}", key, Extract((obj as IDictionary<string, object>)[key], ident, currentIdentation));
+				}
+
+				if (ident)
+				{
+					currentIdentation--;
+					json.AppendLine();
+					json.Append(new string('\t', currentIdentation));
+				}
+
+				json.Append("}");
+
+				return json.ToString();
+			}
+
+			else if (obj is IEnumerable)
+			{
+				StringBuilder json = new StringBuilder();
+				if(ident)
+					json.AppendLine();
+				json.Append(new string('\t', currentIdentation));
+				json.Append("[");
+
+				bool first = true;
+
+				if (ident)
+					currentIdentation++;
+
+				foreach (var value in obj)
+				{
+					if (first) first = false;
+					else json.Append(',');
+
+					if (ident)
+					{
+						json.AppendLine();
+						json.Append(new string('\t', currentIdentation));
+					}
+
+					json.Append(Extract(value, ident, currentIdentation));
+				}
+
+				if (ident)
+				{
+					currentIdentation--;
+					json.AppendLine();
+					json.Append(new string('\t', currentIdentation));
+				}
+
+				json.Append("]");
+
+				return json.ToString();
+			}
 
 			Dictionary<string, object> extractedInfo = new Dictionary<string,object>();
 			foreach (PropertyInfo prop in obj.GetType().GetProperties())
 				extractedInfo.Add(prop.Name, prop.GetValue(obj, null));
-			return Extract(extractedInfo);
+			return Extract(extractedInfo, ident, currentIdentation);
+		}
+
+		static string EncodeString(string original)
+		{
+			StringBuilder final = new StringBuilder();
+			foreach(char ch in original)
+			{
+				if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+_.,~^ ()[]{}%@/!?#&*:".IndexOf(ch) < 0)
+					final.Append("\\u" + ((int)ch).ToString("X4"));
+				else final.Append(ch);
+			}
+
+			return final.ToString();
 		}
 	}
 }
