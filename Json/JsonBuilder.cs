@@ -121,7 +121,17 @@ namespace Json
 			return values;
 		}
 
-		public static string Extract(object obj, bool ident = false, int currentIdentation = 0)
+		public static string Extract(object obj)
+		{
+			return Extract(obj, false, 0);
+		}
+
+		public static string Extract(object obj, bool ident)
+		{
+			return Extract(obj, ident, 0);
+		}
+
+		public static string Extract(object obj, bool ident, int currentIdentation)
 		{
 			if ((object)obj == null)
 				return "null";
