@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -10,12 +9,12 @@ namespace Json
 {
 	public static class JsonBuilder
 	{
-		public static dynamic Build(string json)
+		public static object Build(string json)
 		{
 			return Build(new JsonReader(json));
 		}
 
-		public static dynamic Build(JsonReader reader)
+		public static object Build(JsonReader reader)
 		{
 			var token = reader.ReadToken();
 			switch (token.Type)
@@ -56,9 +55,9 @@ namespace Json
 			}
 		}
 
-		public static dynamic BuildObject(JsonReader reader)
+		public static IDictionary<string, object> BuildObject(JsonReader reader)
 		{
-			dynamic obj = new ExpandoObject();
+			IDictionary<string, object> obj = new Dictionary<string, object>();
 
 			var nextToken = reader.ReadToken();
 
@@ -81,8 +80,8 @@ namespace Json
 					if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != ":")
 						throw new SemanticException("':'", nextToken.Value, reader.Position);
 
-					dynamic value = JsonBuilder.Build(reader);
-					((IDictionary<string, object>) obj).Add(property.Value, value);
+					object value = JsonBuilder.Build(reader);
+					obj.Add(property.Value, value);
 
 					nextToken = reader.ReadToken();
 
@@ -95,9 +94,9 @@ namespace Json
 			return obj;
 		}
 
-		public static List<dynamic> BuildList(JsonReader reader)
+		public static List<object> BuildList(JsonReader reader)
 		{
-			var values = new List<dynamic>();
+			var values = new List<object>();
 
 			var nextToken = reader.ReadToken();
 			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "[")
@@ -122,7 +121,7 @@ namespace Json
 			return values;
 		}
 
-		public static string Extract(dynamic obj, bool ident = false, int currentIdentation = 0)
+		public static string Extract(object obj, bool ident = false, int currentIdentation = 0)
 		{
 			if ((object)obj == null)
 				return "null";
@@ -131,7 +130,7 @@ namespace Json
 				return ((bool)obj).ToString().ToLower();
 
 			if (obj is int || obj is Int64 || obj is decimal || obj is double || obj is float)
-				return obj.ToString(CultureInfo.InvariantCulture);
+				return ((IConvertible)obj).ToString(CultureInfo.InvariantCulture);
 
 			if (obj is string || obj is char)
 				return "\"" + EncodeString(obj.ToString()) + "\"";
@@ -188,7 +187,7 @@ namespace Json
 				if (ident)
 					currentIdentation++;
 
-				foreach (var value in obj)
+				foreach (var value in (obj as IEnumerable))
 				{
 					if (first) first = false;
 					else json.Append(',');
