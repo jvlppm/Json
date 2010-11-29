@@ -101,6 +101,7 @@ namespace Json
 										case 'v': token += "\v"; break;
 										case '\"': token += "\""; break;
 										case '\\': token += "\\"; break;
+										case '/': token += "/"; break;
 
 										case 'u':
 											string code = Text.Substring(Position + 1, 4);
