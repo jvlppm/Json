@@ -33,7 +33,7 @@ namespace Json
 				case JsonToken.TokenType.Number:
 					if(token.Value.Contains(".") || token.Value.Length > 18)
 						return decimal.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
-					if (token.Value.Length > 10)
+					if (token.Value.Length >= 10)
 						return Int64.Parse(token.Value);
 					return int.Parse(token.Value);
 
