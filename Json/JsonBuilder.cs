@@ -28,10 +28,10 @@ namespace Json
 					else if (token.Value == "[")
 						return BuildList(reader);
 
-					throw new SemanticException(new [] {"'{'", "'['"}, token.Value, reader.Position);
+					throw new SemanticException(new[] { "'{'", "'['" }, token.Value, reader.Position);
 
 				case JsonToken.TokenType.Number:
-					if(token.Value.Contains(".") || token.Value.Length > 18)
+					if (token.Value.Contains(".") || token.Value.Length > 18)
 						return decimal.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
 					if (token.Value.Length >= 10)
 						return Int64.Parse(token.Value);
@@ -88,7 +88,7 @@ namespace Json
 				} while (nextToken.Type == JsonToken.TokenType.SpecialChar && nextToken.Value == ",");
 
 				if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "}")
-					throw new SemanticException(new []{"'}'", "','"}, nextToken.Value, reader.Position);
+					throw new SemanticException(new[] { "'}'", "','" }, nextToken.Value, reader.Position);
 			}
 
 			return obj;
@@ -187,7 +187,7 @@ namespace Json
 			else if (obj is IEnumerable)
 			{
 				StringBuilder json = new StringBuilder();
-				if(ident)
+				if (ident)
 					json.AppendLine();
 				json.Append(new string('\t', currentIdentation));
 				json.Append("[");
@@ -223,7 +223,7 @@ namespace Json
 				return json.ToString();
 			}
 
-			Dictionary<string, object> extractedInfo = new Dictionary<string,object>();
+			Dictionary<string, object> extractedInfo = new Dictionary<string, object>();
 			foreach (PropertyInfo prop in obj.GetType().GetProperties())
 				extractedInfo.Add(prop.Name, prop.GetValue(obj, null));
 			return Extract(extractedInfo, ident, currentIdentation);
@@ -232,7 +232,7 @@ namespace Json
 		static string EncodeString(string original)
 		{
 			StringBuilder final = new StringBuilder();
-			foreach(char ch in original)
+			foreach (char ch in original)
 			{
 				if ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+_.,~^ ()[]{}%@/!?#&*:".IndexOf(ch) < 0)
 					final.Append("\\u" + ((int)ch).ToString("X4"));
