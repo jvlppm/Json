@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 using Jv.Json;
-using System.Dynamic;
 
 namespace Example
 {
+	using JsonObject = System.Collections.Generic.IDictionary<string, object>;
+
 	class Program
 	{
 		static void Main(string[] args)
@@ -17,8 +18,8 @@ namespace Example
 			//object obj = json.AsJson();
 			//Console.WriteLine(obj.ToJson());
 
-			foreach (var pessoa in json.AsJson())
-				Console.WriteLine(pessoa.nome + ": " + pessoa.idade);
+			foreach (JsonObject pessoa in json.AsJson<IEnumerable>())
+				Console.WriteLine(pessoa["nome"] + ": " + pessoa["idade"]);
 		}
 	}
 }

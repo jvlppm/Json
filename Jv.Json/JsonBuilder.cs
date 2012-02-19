@@ -5,18 +5,17 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Collections;
-using System.Dynamic;
 
 namespace Jv.Json
 {
 	public static class JsonBuilder
 	{
-		public static dynamic Build(string json)
+		public static object Build(string json)
 		{
 			return Build(new JsonReader(json));
 		}
 
-		public static dynamic Build(JsonReader reader)
+		public static object Build(JsonReader reader)
 		{
 			var token = reader.ReadToken();
 			switch (token.Type)
@@ -63,9 +62,9 @@ namespace Jv.Json
 			}
 		}
 
-		public static dynamic BuildObject(JsonReader reader)
+		public static object BuildObject(JsonReader reader)
 		{
-			var obj = new ExpandoObject() as IDictionary<string, object>;
+			var obj = new Dictionary<string, object>() as IDictionary<string, object>;
 
 			var nextToken = reader.ReadToken();
 
@@ -102,7 +101,7 @@ namespace Jv.Json
 			return obj;
 		}
 
-		public static List<dynamic> BuildList(JsonReader reader)
+		public static List<object> BuildList(JsonReader reader)
 		{
 			var values = new List<dynamic>();
 
