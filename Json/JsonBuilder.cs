@@ -34,7 +34,13 @@ namespace Json
 					if (token.Value.Contains(".") || token.Value.Length > 18)
 						return decimal.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
 					if (token.Value.Length >= 10)
+					{
+						int smallResult;
+						if (int.TryParse(token.Value, out smallResult))
+							return smallResult;
+
 						return Int64.Parse(token.Value);
+					}
 					return int.Parse(token.Value);
 
 				case JsonToken.TokenType.KeyWord:
@@ -160,6 +166,9 @@ namespace Json
 
 				foreach (var key in (obj as IDictionary<string, object>).Keys)
 				{
+					if ((obj as IDictionary<string, object>)[key] is Delegate)
+						continue;
+
 					if (first) first = false;
 					else json.Append(',');
 

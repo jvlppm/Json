@@ -128,7 +128,7 @@ namespace Json
 							if (char.IsNumber(Text[Position]) || Text[Position] == '+' || Text[Position] == '-')
 								tokenType = JsonToken.TokenType.Number;
 						}
-						else if (tokenType == JsonToken.TokenType.Number && !char.IsNumber(Text[Position]))
+						else if (tokenType == JsonToken.TokenType.Number && !char.IsNumber(Text[Position]) && (Text[Position] != '.' || token.Contains(".")))
 							tokenType = JsonToken.TokenType.String;
 						token += Text[Position];
 						break;
