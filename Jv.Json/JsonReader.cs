@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 
-namespace Json
+namespace Jv.Json
 {
 	public class JsonToken
 	{

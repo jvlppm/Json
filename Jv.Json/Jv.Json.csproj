@@ -8,8 +8,8 @@
     <ProjectGuid>{AC5EA67C-36E6-450E-97A3-944A53B34E9B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Json</RootNamespace>
-    <AssemblyName>Json</AssemblyName>
+    <RootNamespace>Jv.Json</RootNamespace>
+    <AssemblyName>Jv.Json</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>

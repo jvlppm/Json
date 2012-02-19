@@ -6,7 +6,7 @@ using System.Text;
 using System.Collections;
 using System.Dynamic;
 
-namespace Json
+namespace Jv.Json
 {
 	public static class JsonBuilder
 	{

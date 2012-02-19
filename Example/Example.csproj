@@ -47,7 +47,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Json\Json.csproj">
+    <ProjectReference Include="..\Jv.Json\Jv.Json.csproj">
       <Project>{AC5EA67C-36E6-450E-97A3-944A53B34E9B}</Project>
       <Name>Json</Name>
     </ProjectReference>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Json
+namespace Jv.Json
 {
 	public class ParseException : Exception
 	{
