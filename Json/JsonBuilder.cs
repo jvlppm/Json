@@ -4,17 +4,18 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Collections;
+using System.Dynamic;
 
 namespace Json
 {
 	public static class JsonBuilder
 	{
-		public static object Build(string json)
+		public static dynamic Build(string json)
 		{
 			return Build(new JsonReader(json));
 		}
 
-		public static object Build(JsonReader reader)
+		public static dynamic Build(JsonReader reader)
 		{
 			var token = reader.ReadToken();
 			switch (token.Type)
@@ -61,9 +62,9 @@ namespace Json
 			}
 		}
 
-		public static IDictionary<string, object> BuildObject(JsonReader reader)
+		public static dynamic BuildObject(JsonReader reader)
 		{
-			IDictionary<string, object> obj = new Dictionary<string, object>();
+			var obj = new ExpandoObject() as IDictionary<string, object>;
 
 			var nextToken = reader.ReadToken();
 
@@ -86,7 +87,7 @@ namespace Json
 					if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != ":")
 						throw new SemanticException("':'", nextToken.Value, reader.Position);
 
-					object value = JsonBuilder.Build(reader);
+					var value = JsonBuilder.Build(reader);
 					obj.Add(property.Value, value);
 
 					nextToken = reader.ReadToken();
@@ -100,9 +101,9 @@ namespace Json
 			return obj;
 		}
 
-		public static List<object> BuildList(JsonReader reader)
+		public static List<dynamic> BuildList(JsonReader reader)
 		{
-			var values = new List<object>();
+			var values = new List<dynamic>();
 
 			var nextToken = reader.ReadToken();
 			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "[")
@@ -129,15 +130,15 @@ namespace Json
 
 		public static string Extract(object obj)
 		{
-			return Extract(obj, false, 0);
+			return Extract(obj, false, 0).Trim('\r', '\n');
 		}
 
 		public static string Extract(object obj, bool ident)
 		{
-			return Extract(obj, ident, 0);
+			return Extract(obj, ident, 0).Trim('\r', '\n');
 		}
 
-		public static string Extract(object obj, bool ident, int currentIdentation)
+		static string Extract(object obj, bool ident, int currentIdentation)
 		{
 			if ((object)obj == null)
 				return "null";
@@ -151,7 +152,7 @@ namespace Json
 			if (obj is string || obj is char)
 				return "\"" + EncodeString(obj.ToString()) + "\"";
 
-			if (obj is IDictionary<string, object>)
+			if (obj is IDictionary<string,object>)
 			{
 				StringBuilder json = new StringBuilder();
 				if (ident)
@@ -232,7 +233,7 @@ namespace Json
 				return json.ToString();
 			}
 
-			Dictionary<string, object> extractedInfo = new Dictionary<string, object>();
+			var extractedInfo = new Dictionary<string, object>();
 			foreach (PropertyInfo prop in obj.GetType().GetProperties())
 				extractedInfo.Add(prop.Name, prop.GetValue(obj, null));
 			return Extract(extractedInfo, ident, currentIdentation);

@@ -12,9 +12,12 @@ namespace Example
 	{
 		static void Main(string[] args)
 		{
-			dynamic pessoas = JsonBuilder.Build("[{\"nome\":\"João Vitor\", idade: 24}, {\"nome\":\"Teste\", idade: 10}]");
+			string json = "[{\"nome\":\"João Vitor\", idade: 24}, {\"nome\":\"Teste\", idade: 10}]";
 
-			foreach (var pessoa in pessoas)
+			//object obj = json.AsJson();
+			//Console.WriteLine(obj.ToJson());
+
+			foreach (var pessoa in json.AsJson())
 				Console.WriteLine(pessoa.nome + ": " + pessoa.idade);
 		}
 	}
