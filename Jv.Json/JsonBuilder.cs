@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Collections;
@@ -152,7 +153,7 @@ namespace Jv.Json
 			if (obj is string || obj is char)
 				return "\"" + EncodeString(obj.ToString()) + "\"";
 
-			if (obj is IDictionary<string,object>)
+			if (obj is IDictionary && ((IDictionary)obj).Keys.OfType<object>().All(k => k is string))
 			{
 				StringBuilder json = new StringBuilder();
 				if (ident)
@@ -165,9 +166,9 @@ namespace Jv.Json
 				if (ident)
 					currentIdentation++;
 
-				foreach (var key in (obj as IDictionary<string, object>).Keys)
+				foreach (var key in (obj as IDictionary).Keys)
 				{
-					if ((obj as IDictionary<string, object>)[key] is Delegate)
+					if ((obj as IDictionary)[key] is Delegate)
 						continue;
 
 					if (first) first = false;
@@ -179,7 +180,7 @@ namespace Jv.Json
 						json.Append(new string('\t', currentIdentation));
 					}
 
-					json.AppendFormat(ident ? "\"{0}\": {1}" : "\"{0}\":{1}", key, Extract((obj as IDictionary<string, object>)[key], ident, currentIdentation));
+					json.AppendFormat(ident ? "\"{0}\": {1}" : "\"{0}\":{1}", key, Extract((obj as IDictionary)[key], ident, currentIdentation));
 				}
 
 				if (ident)
