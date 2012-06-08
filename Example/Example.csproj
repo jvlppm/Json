@@ -48,8 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Jv.Json\Jv.Json.csproj">
-      <Project>{AC5EA67C-36E6-450E-97A3-944A53B34E9B}</Project>
-      <Name>Json</Name>
+      <Project>{ac5ea67c-36e6-450e-97a3-944a53b34e9b}</Project>
+      <Name>Jv.Json</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
