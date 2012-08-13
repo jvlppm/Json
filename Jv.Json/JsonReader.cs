@@ -3,17 +3,8 @@ using System.Globalization;
 
 namespace Jv.Json
 {
-	public class JsonToken
+	class JsonToken
 	{
-		public enum TokenType
-		{
-			Unidentified,
-			KeyWord,
-			SpecialChar,
-			Number,
-			String
-		}
-
 		public JsonToken(TokenType type, string value)
 		{
 			Type = type;
@@ -29,7 +20,7 @@ namespace Jv.Json
 		}
 	}
 
-	public class JsonReader
+	class JsonReader
 	{
 		public string Text { get; private set; }
 		public int Position { get; private set; }
@@ -48,7 +39,7 @@ namespace Jv.Json
 			if (BackToken.Count > 0)
 				return BackToken.Pop();
 
-			JsonToken.TokenType tokenType = JsonToken.TokenType.Unidentified;
+			TokenType tokenType = TokenType.Unidentified;
 			string token = string.Empty;
 			bool endToken = false;
 			for (; !endToken && Position < Text.Length; Position++)
@@ -75,7 +66,7 @@ namespace Jv.Json
 							Position--;
 							break;
 						}
-						return new JsonToken(JsonToken.TokenType.SpecialChar, Text[Position++].ToString());
+						return new JsonToken(TokenType.SpecialChar, Text[Position++].ToString());
 
 					case '\"':
 						if (token != string.Empty)
@@ -117,7 +108,7 @@ namespace Jv.Json
 							else
 							{
 								Position++;
-								return new JsonToken(JsonToken.TokenType.String, token);
+								return new JsonToken(TokenType.String, token);
 							}
 						}
 						throw new LexicalException("End quote not found for quote at " + startQuote, Position);
@@ -126,26 +117,26 @@ namespace Jv.Json
 						if (token == string.Empty)
 						{
 							if (char.IsNumber(Text[Position]) || Text[Position] == '+' || Text[Position] == '-')
-								tokenType = JsonToken.TokenType.Number;
+								tokenType = TokenType.Number;
 						}
-						else if (tokenType == JsonToken.TokenType.Number && !char.IsNumber(Text[Position]) && (Text[Position] != '.' || token.Contains(".")))
-							tokenType = JsonToken.TokenType.String;
+						else if (tokenType == TokenType.Number && !char.IsNumber(Text[Position]) && (Text[Position] != '.' || token.Contains(".")))
+							tokenType = TokenType.String;
 						token += Text[Position];
 						break;
 				}
 			}
 
-			if (tokenType == JsonToken.TokenType.Unidentified)
+			if (tokenType == TokenType.Unidentified)
 			{
 				switch (token)
 				{
 					case "true":
 					case "false":
 					case "null":
-						tokenType = JsonToken.TokenType.KeyWord;
+						tokenType = TokenType.KeyWord;
 						break;
 					default:
-						tokenType = JsonToken.TokenType.String;
+						tokenType = TokenType.String;
 						break;
 				}
 			}

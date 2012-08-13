@@ -2,7 +2,10 @@
 
 namespace Jv.Json
 {
-	public class ParseException : Exception
+#if !NETFX_CORE
+	public
+#endif
+	class ParseException : FormatException
 	{
 		public int Position { get; protected set; }
 
@@ -13,14 +16,20 @@ namespace Jv.Json
 		}
 	}
 
-	public class LexicalException : ParseException
+#if !NETFX_CORE
+	public
+#endif
+	class LexicalException : ParseException
 	{
 		public LexicalException(string message, int position) : base(message, position)
 		{
 		}
 	}
 
-	public class SemanticException : ParseException
+#if !NETFX_CORE
+	public
+#endif
+    class SemanticException : ParseException
 	{
 		public override string Message
 		{

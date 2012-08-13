@@ -11,8 +11,13 @@ namespace Jv.Json
 		{
 			return JsonBuilder.Build(json);
 		}
+        
+		public static string ToJson(this object obj)
+		{
+			return JsonBuilder.Extract(obj, false);
+		}
 
-		public static string ToJson(this object obj, bool ident=false)
+		public static string ToJson(this object obj, bool ident)
 		{
 			return JsonBuilder.Extract(obj, ident);
 		}

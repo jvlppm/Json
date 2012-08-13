@@ -16,12 +16,12 @@ namespace Jv.Json
 			return Build(new JsonReader(json));
 		}
 
-		public static dynamic Build(JsonReader reader)
+		static dynamic Build(JsonReader reader)
 		{
 			var token = reader.ReadToken();
 			switch (token.Type)
 			{
-				case JsonToken.TokenType.SpecialChar:
+				case TokenType.SpecialChar:
 					reader.PutBack(token);
 
 					if (token.Value == "{")
@@ -32,7 +32,7 @@ namespace Jv.Json
 
 					throw new SemanticException(new[] { "'{'", "'['" }, token.Value, reader.Position);
 
-				case JsonToken.TokenType.Number:
+				case TokenType.Number:
 					if (token.Value.Contains(".") || token.Value.Length > 18)
 						return decimal.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
 					if (token.Value.Length >= 10)
@@ -45,7 +45,7 @@ namespace Jv.Json
 					}
 					return int.Parse(token.Value);
 
-				case JsonToken.TokenType.KeyWord:
+				case TokenType.KeyWord:
 					switch (token.Value)
 					{
 						case "null":
@@ -63,29 +63,29 @@ namespace Jv.Json
 			}
 		}
 
-		public static dynamic BuildObject(JsonReader reader)
+		static dynamic BuildObject(JsonReader reader)
 		{
 			var obj = new ExpandoObject() as IDictionary<string, object>;
 
 			var nextToken = reader.ReadToken();
 
-			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "{")
+			if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "{")
 				throw new SemanticException("{", nextToken.Value, reader.Position);
 
 			nextToken = reader.ReadToken();
 
-			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "}")
+			if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "}")
 			{
 				reader.PutBack(nextToken);
 
 				do
 				{
 					var property = reader.ReadToken();
-					if (property.Type != JsonToken.TokenType.String)
+					if (property.Type != TokenType.String)
 						throw new SemanticException("String", property.Type.ToString(), reader.Position);
 
 					nextToken = reader.ReadToken();
-					if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != ":")
+					if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != ":")
 						throw new SemanticException("':'", nextToken.Value, reader.Position);
 
 					var value = JsonBuilder.Build(reader);
@@ -93,26 +93,26 @@ namespace Jv.Json
 
 					nextToken = reader.ReadToken();
 
-				} while (nextToken.Type == JsonToken.TokenType.SpecialChar && nextToken.Value == ",");
+				} while (nextToken.Type == TokenType.SpecialChar && nextToken.Value == ",");
 
-				if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "}")
+				if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "}")
 					throw new SemanticException(new[] { "'}'", "','" }, nextToken.Value, reader.Position);
 			}
 
 			return obj;
 		}
 
-		public static List<dynamic> BuildList(JsonReader reader)
+		static IList<dynamic> BuildList(JsonReader reader)
 		{
 			var values = new List<dynamic>();
 
 			var nextToken = reader.ReadToken();
-			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "[")
+			if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "[")
 				throw new SemanticException("'['", nextToken.Value, reader.Position);
 
 			nextToken = reader.ReadToken();
 
-			if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "]")
+			if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "]")
 			{
 				reader.PutBack(nextToken);
 
@@ -120,9 +120,9 @@ namespace Jv.Json
 				{
 					values.Add(Build(reader));
 					nextToken = reader.ReadToken();
-				} while (nextToken.Type == JsonToken.TokenType.SpecialChar && nextToken.Value == ",");
+				} while (nextToken.Type == TokenType.SpecialChar && nextToken.Value == ",");
 
-				if (nextToken.Type != JsonToken.TokenType.SpecialChar || nextToken.Value != "]")
+				if (nextToken.Type != TokenType.SpecialChar || nextToken.Value != "]")
 					throw new SemanticException("']'", nextToken.Value, reader.Position);
 			}
 
@@ -148,7 +148,7 @@ namespace Jv.Json
 				return ((bool)obj).ToString().ToLower();
 
 			if (obj is int || obj is Int64 || obj is decimal || obj is double || obj is float)
-				return ((IConvertible)obj).ToString(CultureInfo.InvariantCulture);
+				return Convert.ToString(obj, CultureInfo.InvariantCulture);
 
 			if (obj is string || obj is char)
 				return "\"" + EncodeString(obj.ToString()) + "\"";
@@ -235,7 +235,11 @@ namespace Jv.Json
 			}
 
 			var extractedInfo = new Dictionary<string, object>();
+#if NETFX_CORE
+			foreach (PropertyInfo prop in obj.GetType().GetTypeInfo().DeclaredProperties)
+#else
 			foreach (PropertyInfo prop in obj.GetType().GetProperties())
+#endif
 				extractedInfo.Add(prop.Name, prop.GetValue(obj, null));
 			return Extract(extractedInfo, ident, currentIdentation);
 		}
